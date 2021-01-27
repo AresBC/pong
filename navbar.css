@@ -1,0 +1,16 @@
+.navbar {
+    background-color: rgb(30, 30, 30);
+    font-size: 0;
+}
+
+.navbar a {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 20pt;
+    padding: 5px 15px;
+    color: white;
+}
+
+.navbar a:hover {
+    background-color: rgb(60, 60, 60);
+}
