@@ -1,70 +1,108 @@
 let leftPlayerScore, rightPlayerScore;
 
 function px(num) {
-  return num + "px";
+    return num + "px";
 }
+
 function pz(num) {
-  return num + "%";
+    return num + "%";
 }
+
 function pt(num) {
-  return num + "pt";
+    return num + "pt";
+}
+
+function getOffsetLeft(elem) {
+    let offsetLeft = 0;
+    do {
+        if (!isNaN(elem.offsetLeft)) {
+            offsetLeft += elem.offsetLeft;
+        }
+    } while (elem = elem.offsetParent);
+    return offsetLeft;
 }
 
 function initalize() {
-  gameField = new GameField(670, 450, "game");
-  gameField.render();
-  ball = new Ball(50, gameField.getMiddle().width, gameField.getMiddle().height);
-  ball.render();
-}
+    gameField = new GameField(670, 450, "game");
+    gameField.render();
+    ball = new Ball(
+        50,
+        gameField.getMiddle().width,
+        gameField.getMiddle().height
+    );
+    //Test zur Erfassung von der Position des Spielfeldes
+    console.log(gameField.getMiddle().width);
+    console.log(gameField.getMiddle().height);
+    ball.render();
+    alert(getOffsetLeft(gameField.gameField));
+    var bodyRect = document.body.getBoundingClientRect(),
+        elemRect = gameField.gameField.getBoundingClientRect(),
+        offset   = elemRect.top - bodyRect.top;
 
+    alert('Element is ' + offset + ' vertical pixels from <body>');
+}
 
 
 class Ball {
-  constructor(size, x, y) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.setColor("blue");
-  }
+    constructor(size, x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.setColor("blue");
+        this.ball = document.createElement("div");
+        document.body.appendChild(this.ball);
+        this.ball.style.position = "absolute";
+    }
 
-  setColor(color) {
-    this.color = color;
-  }
+    setColor(color) {
+        this.color = color;
+    }
 
-  render() {
-    this.ball = document.createElement("div");
-    document.body.appendChild(this.ball);
-    this.ball.style.width = px(this.size);
-    this.ball.style.height = px(this.size);
-    this.ball.style.backgroundColor = this.color;
-    this.ball.style.borderRadius = pz(50);
-    this.ball.style.pos = pz(50);
-  }
+    render() {
+        this.ball.style.width = px(this.size);
+        this.ball.style.height = px(this.size);
+        this.ball.style.backgroundColor = this.color;
+        this.ball.style.borderRadius = px(50);
+        this.ball.style.pos = pz(50);
+        this.ball.style.left = px(this.x);
+        this.ball.style.top = px(this.x);
+    }
+}
+
+class BrowserWindow {
+    constructor() {
+        this.height = window.innerHeight;
+        this.width = window.innerWidth;
+    }
 }
 
 class GameField {
-  constructor(width, height, id) {
-    this.width = width;
-    this.height = height;
-    this.id = id;
-    leftPlayerScore = 0;
-    rightPlayerScore = 0;
-    this.gameField = document.getElementById(id);
-  }
+    constructor(width, height, id) {
+        this.width = width;
+        this.height = height;
+        this.id = id;
+        leftPlayerScore = 0;
+        rightPlayerScore = 0;
+        this.gameField = document.getElementById(id);
 
-  render() {
-    this.gameField.style.width = this.width + "px";
-    this.gameField.style.height = this.height + "px";
-    this.gameField.style.backgroundColor = "red";
-    this.gameField.style.margin = "20px";
-  }
+        this.browserWindow = new BrowserWindow();
+    }
 
-  getMiddle() {
-    return {
-      width: this.width / 2,
-      height: this.height / 2
-    };
-  }
+    render() {
+        this.gameField.style.width = this.width + "px";
+        this.gameField.style.height = this.height + "px";
+        this.gameField.style.backgroundColor = "red";
+        this.gameField.style.margin = "20px";
+    }
+
+    getMiddle() {
+        return {
+            // width: (this.browserWindow.width / 2) + (this.width / 2),
+            // height: (this.browserWindow.height / 2) + (this.height / 2)
+            width: (this.browserWindow.width / 2),
+            height: (this.browserWindow.height / 2)
+        };
+    }
 }
 
 initalize();
