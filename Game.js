@@ -12,6 +12,20 @@ function pt(num) {
     return num + "pt";
 }
 
+function devPoint(color, posX, posY) {
+    let div = document.createElement("div");
+    document.body.appendChild(div);
+    div.style.position = "absolute";
+    div.style.backgroundColor = color;
+    div.style.borderRadius = px(50);
+    div.style.borderTopLeftRadius = px(0);
+    div.style.left = px(posX);
+    div.style.top = px(posY);
+    div.style.width = px(25);
+    div.style.height = px(25);
+    console.log(div);
+}
+
 function getOffsetLeft(elem) {
     let offsetLeft = 0;
     do {
@@ -34,12 +48,11 @@ function initalize() {
     console.log(gameField.getMiddle().width);
     console.log(gameField.getMiddle().height);
     ball.render();
-    alert(getOffsetLeft(gameField.gameField));
-    var bodyRect = document.body.getBoundingClientRect(),
-        elemRect = gameField.gameField.getBoundingClientRect(),
-        offset   = elemRect.top - bodyRect.top;
 
-    alert('Element is ' + offset + ' vertical pixels from <body>');
+    let bodyRect = document.body.getBoundingClientRect(),
+        elemRect = gameField.gameField.getBoundingClientRect(),
+        offset = elemRect.top - bodyRect.top;
+    devPoint("yellow",getOffsetLeft(gameField.gameField), offset);
 }
 
 
