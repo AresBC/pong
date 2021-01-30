@@ -12,17 +12,6 @@ function pt(num) {
     return num + "pt";
 }
 
-function devPoint(ele, color, posX, posY) {
-    ele.style.position = "absolute";
-    ele.style.backgroundColor = color;
-    ele.style.borderRadius = px(50);
-    ele.style.borderTopLeftRadius = px(0);
-    ele.style.left = px(posX);
-    ele.style.top = px(posY);
-    ele.style.width = px(25);
-    ele.style.height = px(25);
-}
-
 function getOffsetLeft(elem) {
     let offsetLeft = 0;
     do {
@@ -33,29 +22,88 @@ function getOffsetLeft(elem) {
     return offsetLeft;
 }
 
+let loop = (gameLoop, fps) => {
+    setInterval(() => {
+        gameLoop();
+    }, 1000 / fps);
+}
+
 function initalize() {
-    gameField = new GameField(670, 450, "game");
+    let sc = new Scaler(16, 9, 670);
+    let gameField = new GameField(sc.absoluteWidth, sc.absoluteHeight, "game");
     gameField.render();
-    ball = new Ball(
+    let ball = new Ball(
         50,
         gameField.getMiddle().width,
         gameField.getMiddle().height
     );
+
     ball.render();
 
-    let div = document.createElement("div");
-    document.body.appendChild(div);
-    loop(div);
+
+    //Test zur Erfassung von der Position des Spielfeldes
+    let devFunc = new DevFunc(gameField);
+    devFunc.devPoint("yellow", 10, 10);
+
 }
 
-function loop(div) {
-    setInterval(() => {
-        let bodyRect = document.body.getBoundingClientRect(),
-            elemRect = gameField.gameField.getBoundingClientRect(),
-            offset = elemRect.top - bodyRect.top;
-        devPoint(div, "yellow",getOffsetLeft(gameField.gameField), offset);
-        console.log("loop");
-    }, 1);
+
+class DevFunc {
+
+    constructor(gameField) {
+        this.gameField = gameField;
+    }
+
+    devPoint(color, posX = 0, posY = 0) {
+        let ele = document.createElement("div");
+        document.body.appendChild(ele);
+
+        let relPosY = () => {
+            return getOffsetLeft(this.gameField.gameField)
+        };
+        let relPosX = () => {
+            let bodyRect = document.body.getBoundingClientRect(),
+                elemRect = this.gameField.gameField.getBoundingClientRect(),
+                offset = elemRect.top - bodyRect.top;
+            return offset;
+        }
+
+        loop(() => {
+            ele.style.position = "absolute";
+            ele.style.width = px(25);
+            ele.style.height = px(25);
+            ele.style.backgroundColor = color;
+            ele.style.borderRadius = px(50);
+            ele.style.borderTopLeftRadius = px(0);
+            ele.style.pos = pz(50);
+            ele.style.left = px(relPosY() + posY);
+            ele.style.top = px(relPosX() + posX);
+            console.log("loop");
+        }, 60);
+    }
+
+}
+
+class Scaler {
+    constructor(displayWidth, displayHeight, absoluteWidth) {
+        this.displayWidth = displayWidth;
+        this.displayHeight = displayHeight;
+        this.absoluteWidth = absoluteWidth;
+        this.absoluteHeight = this.calcAbsoluteHeight();
+    }
+
+    calcAbsoluteHeight() {
+        return this.absoluteHeight = this.absoluteWidth / this.displayWidth * this.displayHeight;
+    }
+
+    width(px) {
+        return this.absoluteWidth / this.displayWidth / 100 * px;
+    }
+
+    height(px) {
+        return this.absoluteHeight/ this.displayHeight / 100 * px;
+    }
+
 }
 
 class Ball {
