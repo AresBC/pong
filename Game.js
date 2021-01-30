@@ -12,18 +12,15 @@ function pt(num) {
     return num + "pt";
 }
 
-function devPoint(color, posX, posY) {
-    let div = document.createElement("div");
-    document.body.appendChild(div);
-    div.style.position = "absolute";
-    div.style.backgroundColor = color;
-    div.style.borderRadius = px(50);
-    div.style.borderTopLeftRadius = px(0);
-    div.style.left = px(posX);
-    div.style.top = px(posY);
-    div.style.width = px(25);
-    div.style.height = px(25);
-    console.log(div);
+function devPoint(ele, color, posX, posY) {
+    ele.style.position = "absolute";
+    ele.style.backgroundColor = color;
+    ele.style.borderRadius = px(50);
+    ele.style.borderTopLeftRadius = px(0);
+    ele.style.left = px(posX);
+    ele.style.top = px(posY);
+    ele.style.width = px(25);
+    ele.style.height = px(25);
 }
 
 function getOffsetLeft(elem) {
@@ -44,17 +41,22 @@ function initalize() {
         gameField.getMiddle().width,
         gameField.getMiddle().height
     );
-    //Test zur Erfassung von der Position des Spielfeldes
-    console.log(gameField.getMiddle().width);
-    console.log(gameField.getMiddle().height);
     ball.render();
 
-    let bodyRect = document.body.getBoundingClientRect(),
-        elemRect = gameField.gameField.getBoundingClientRect(),
-        offset = elemRect.top - bodyRect.top;
-    devPoint("yellow",getOffsetLeft(gameField.gameField), offset);
+    let div = document.createElement("div");
+    document.body.appendChild(div);
+    loop(div);
 }
 
+function loop(div) {
+    setInterval(() => {
+        let bodyRect = document.body.getBoundingClientRect(),
+            elemRect = gameField.gameField.getBoundingClientRect(),
+            offset = elemRect.top - bodyRect.top;
+        devPoint(div, "yellow",getOffsetLeft(gameField.gameField), offset);
+        console.log("loop");
+    }, 1);
+}
 
 class Ball {
     constructor(size, x, y) {
