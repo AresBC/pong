@@ -32,21 +32,23 @@ let loop = (gameLoop, fps) => {
 
 function initialize() {
     let sc = new Scaler(16, 9, 670);
-    let field = new GameField(sc.absoluteWidth, sc.absoluteHeight, "game");
-    sc.calcRelPositions(field);
-    field.setRelPositions(sc.relPosX, sc.relPosY);
+    let field = new GameField(sc, "game");
 
     //Test zur Erfassung von der Position des Spielfeldes
     let devFunc = new DevFunc(field);
     devFunc.devPoint("yellow", 0, 0);
     devFunc.devPoint("green", 20, 100);
 
-    let ball = new Ball(25, sc.relPosX, sc.relPosY);
+    let ball = new Ball(sc,25, 100, 100);
 
+    // pre render
     loop(() => {
-        ball.render();
+        ball.move(1,1)
+
         field.render();
+        ball.render();
     }, 60);
+
 }
 
 
@@ -60,10 +62,10 @@ class DevFunc {
         let ele = document.createElement("div");
         document.body.appendChild(ele);
 
-        let relPosY = () => {
+        let relPosX = () => {
             return getOffsetLeft(this.gameField.gameField)
         };
-        let relPosX = () => {
+        let relPosY = () => {
             let bodyRect = document.body.getBoundingClientRect(),
                 elemRect = this.gameField.gameField.getBoundingClientRect(),
                 offset = elemRect.top - bodyRect.top;
@@ -78,8 +80,8 @@ class DevFunc {
             ele.style.borderRadius = px(50);
             ele.style.borderTopLeftRadius = px(0);
             ele.style.pos = pz(50);
-            ele.style.left = px(relPosY() + posY);
-            ele.style.top = px(relPosX() + posX);
+            ele.style.left = px(relPosX() + posY);
+            ele.style.top = px(relPosY() + posX);
         }, 60);
     }
 
@@ -104,11 +106,11 @@ class Scaler {
         this.relPosY = this.calcRelPosY(gameField);
     }
 
-    calcRelPosY(gameField) {
+    calcRelPosX(gameField) {
         return getOffsetLeft(gameField.gameField)
     }
 
-    calcRelPosX(gameField) {
+    calcRelPosY(gameField) {
         let bodyRect = document.body.getBoundingClientRect(),
             elemRect = gameField.gameField.getBoundingClientRect(),
             offset = elemRect.top - bodyRect.top;
@@ -125,10 +127,13 @@ class Scaler {
 
 }
 
-class Ball {
-    constructor(size, x, y) {
-        this.x = x;
-        this.y = y;
+class Ball{
+    constructor(sc, size, x, y) {
+        this.sc = sc;
+        this.x = this.sc.relPosX + x;
+        this.y = this.sc.relPosY + y;
+        this.relPosX = x;
+        this.relPosY = y;
         this.size = size;
         this.color = "blue";
         this.ball = document.createElement("div");
@@ -136,7 +141,14 @@ class Ball {
         this.ball.style.position = "absolute";
     }
 
+    move(x, y) {
+        this.relPosX += x;
+        this.relPosY += y;
+    }
+
     render() {
+        this.x = this.sc.relPosX + this.relPosX;
+        this.y = this.sc.relPosY + this.relPosY;
         this.ball.style.width = px(this.size);
         this.ball.style.height = px(this.size);
         this.ball.style.backgroundColor = this.color;
@@ -147,34 +159,34 @@ class Ball {
 }
 
 class GameField {
-    constructor(width, height, id) {
-        this.width = width;
-        this.height = height;
+    constructor(sc, id) {
+        this.sc = sc;
+        this.width = this.sc.absoluteWidth;
+        this.height = this.sc.absoluteHeight;
         this.id = id;
         leftPlayerScore = 0;
         rightPlayerScore = 0;
         this.gameField = document.getElementById(id);
 
-        this.relPosX = undefined;
-        this.relPosY = undefined;
+        this.render();
+        this.sc.calcRelPositions(this);
+        this.x = this.sc.relPosX;
+        this.y = this.sc.relPosY;
     }
 
     render() {
+        this.sc.calcRelPositions(this);
         this.gameField.style.width = px(this.width);
         this.gameField.style.height = px(this.height);
         this.gameField.style.backgroundColor = "red";
         this.gameField.style.margin = px(20);
     }
 
-    setRelPositions(relPosX, relPosY) {
-        this.relPosX = relPosX;
-        this.relPosY = relPosY;
-    }
 
     getMiddle() {
         return {
-            width: (this.relPosX + this.width / 2),
-            height: (this.relPosY + this.height / 2)
+            width: (this.x + this.width / 2),
+            height: (this.y + this.height / 2)
         };
     }
 }
