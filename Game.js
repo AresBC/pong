@@ -1,3 +1,5 @@
+"use strict"
+
 let leftPlayerScore, rightPlayerScore;
 
 function px(num) {
@@ -28,23 +30,23 @@ let loop = (gameLoop, fps) => {
     }, 1000 / fps);
 }
 
-function initalize() {
+function initialize() {
     let sc = new Scaler(16, 9, 670);
-    let gameField = new GameField(sc.absoluteWidth, sc.absoluteHeight, "game");
-    gameField.render();
-    let ball = new Ball(
-        50,
-        gameField.getMiddle().width,
-        gameField.getMiddle().height
-    );
-
-    ball.render();
-
+    let field = new GameField(sc.absoluteWidth, sc.absoluteHeight, "game");
+    sc.calcRelPositions(field);
+    field.setRelPositions(sc.relPosX, sc.relPosY);
 
     //Test zur Erfassung von der Position des Spielfeldes
-    let devFunc = new DevFunc(gameField);
-    devFunc.devPoint("yellow", 10, 10);
+    let devFunc = new DevFunc(field);
+    devFunc.devPoint("yellow", 0, 0);
+    devFunc.devPoint("green", 20, 100);
 
+    let ball = new Ball(25, sc.relPosX, sc.relPosY);
+
+    loop(() => {
+        ball.render();
+        field.render();
+    }, 60);
 }
 
 
@@ -78,7 +80,6 @@ class DevFunc {
             ele.style.pos = pz(50);
             ele.style.left = px(relPosY() + posY);
             ele.style.top = px(relPosX() + posX);
-            console.log("loop");
         }, 60);
     }
 
@@ -90,10 +91,28 @@ class Scaler {
         this.displayHeight = displayHeight;
         this.absoluteWidth = absoluteWidth;
         this.absoluteHeight = this.calcAbsoluteHeight();
+        this.relPosX = undefined;
+        this.relPosY = undefined;
     }
 
     calcAbsoluteHeight() {
         return this.absoluteHeight = this.absoluteWidth / this.displayWidth * this.displayHeight;
+    }
+
+    calcRelPositions(gameField) {
+        this.relPosX = this.calcRelPosX(gameField);
+        this.relPosY = this.calcRelPosY(gameField);
+    }
+
+    calcRelPosY(gameField) {
+        return getOffsetLeft(gameField.gameField)
+    }
+
+    calcRelPosX(gameField) {
+        let bodyRect = document.body.getBoundingClientRect(),
+            elemRect = gameField.gameField.getBoundingClientRect(),
+            offset = elemRect.top - bodyRect.top;
+        return offset;
     }
 
     width(px) {
@@ -101,7 +120,7 @@ class Scaler {
     }
 
     height(px) {
-        return this.absoluteHeight/ this.displayHeight / 100 * px;
+        return this.absoluteHeight / this.displayHeight / 100 * px;
     }
 
 }
@@ -111,14 +130,10 @@ class Ball {
         this.x = x;
         this.y = y;
         this.size = size;
-        this.setColor("blue");
+        this.color = "blue";
         this.ball = document.createElement("div");
         document.body.appendChild(this.ball);
         this.ball.style.position = "absolute";
-    }
-
-    setColor(color) {
-        this.color = color;
     }
 
     render() {
@@ -126,16 +141,8 @@ class Ball {
         this.ball.style.height = px(this.size);
         this.ball.style.backgroundColor = this.color;
         this.ball.style.borderRadius = px(50);
-        this.ball.style.pos = pz(50);
         this.ball.style.left = px(this.x);
-        this.ball.style.top = px(this.x);
-    }
-}
-
-class BrowserWindow {
-    constructor() {
-        this.height = window.innerHeight;
-        this.width = window.innerWidth;
+        this.ball.style.top = px(this.y);
     }
 }
 
@@ -148,24 +155,28 @@ class GameField {
         rightPlayerScore = 0;
         this.gameField = document.getElementById(id);
 
-        this.browserWindow = new BrowserWindow();
+        this.relPosX = undefined;
+        this.relPosY = undefined;
     }
 
     render() {
-        this.gameField.style.width = this.width + "px";
-        this.gameField.style.height = this.height + "px";
+        this.gameField.style.width = px(this.width);
+        this.gameField.style.height = px(this.height);
         this.gameField.style.backgroundColor = "red";
-        this.gameField.style.margin = "20px";
+        this.gameField.style.margin = px(20);
+    }
+
+    setRelPositions(relPosX, relPosY) {
+        this.relPosX = relPosX;
+        this.relPosY = relPosY;
     }
 
     getMiddle() {
         return {
-            // width: (this.browserWindow.width / 2) + (this.width / 2),
-            // height: (this.browserWindow.height / 2) + (this.height / 2)
-            width: (this.browserWindow.width / 2),
-            height: (this.browserWindow.height / 2)
+            width: (this.relPosX + this.width / 2),
+            height: (this.relPosY + this.height / 2)
         };
     }
 }
 
-initalize();
+initialize();
