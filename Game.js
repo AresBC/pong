@@ -1,5 +1,10 @@
 "use strict"
 
+// document.addEventListener('keyup', function (evt) {
+//     if (evt.keyCode === 81) {
+//         console.clear();
+//     }
+// });
 let leftPlayerScore, rightPlayerScore;
 
 function px(num) {
@@ -31,23 +36,43 @@ let loop = (gameLoop, fps) => {
 }
 
 function initialize() {
+
     let sc = new Scaler(16, 9, 670);
-    let field = new GameField(sc, "game");
+    let field = new GameField(sc, "game", "black");
+    let rectangle1 = new Rectangle(field,  sc.width(30), sc.height(250),sc.width(20),sc.height(30),"white");
+    let rectangle2 = new Rectangle(field,  sc.width(30), sc.height(250),sc.width(1550),sc.height(30),"white");
 
-    //Test zur Erfassung von der Position des Spielfeldes
+//Test zur Erfassung von der Position des Spielfeldes
     let devFunc = new DevFunc(field);
-    devFunc.devPoint("yellow", 0, 0);
-    devFunc.devPoint("green", 20, 100);
+    devFunc.devPoint("yellow", sc.height(1600), sc.width(900));
 
-    let ball = new Ball(sc,25, 100, 100);
+    let ball = new Ball(field, sc.width(50), 100, 100, "white");
+    ball.speed(1, 1);
 
-    // pre render
+// pre render
     loop(() => {
-        ball.move(1,1)
-
         field.render();
+        rectangle1.render();
+        rectangle2.render();
         ball.render();
-    }, 60);
+    }, 1000);
+
+
+    document.addEventListener('keydown', function (evt) {
+        if (evt.key === "s") {
+            rectangle1.move(0, 7)
+        }
+        if (evt.key === "w") {
+            rectangle1.move(0, -7)
+        }
+        if (evt.key === "ArrowDown") {
+            rectangle2.move(0, 7)
+        }
+        if (evt.key === "ArrowUp") {
+            rectangle2.move(0, -7)
+        }
+    });
+
 
 }
 
@@ -80,12 +105,70 @@ class DevFunc {
             ele.style.borderRadius = px(50);
             ele.style.borderTopLeftRadius = px(0);
             ele.style.pos = pz(50);
-            ele.style.left = px(relPosX() + posY);
-            ele.style.top = px(relPosY() + posX);
+            ele.style.left = px(relPosX() + posX);
+            ele.style.top = px(relPosY() + posY);
         }, 60);
     }
 
 }
+
+class Object {
+    constructor(gameField, width, height, x, y, color) {
+        this.sc = gameField.sc;
+        this.x = this.sc.relPosX + x;
+        this.y = this.sc.relPosY + y;
+        this.relPosX = x;
+        this.relPosY = y;
+        this.width = width;
+        this.height = height;
+        this.color = color;
+        this.obj = document.createElement("div");
+        document.body.appendChild(this.obj);
+        this.obj.style.position = "absolute";
+        this.speed();
+    }
+
+    move(x, y) {
+        this.relPosX += x;
+        this.relPosY += y;
+    }
+
+    speed(x = 0, y = 0) {
+        this.speeds = {
+            x: x,
+            y: y
+        }
+    }
+
+    render() {
+        this.relPosX += this.speeds.x;
+        this.relPosY += this.speeds.y;
+        this.x = this.sc.relPosX + this.relPosX + this.speeds.x;
+        this.y = this.sc.relPosY + this.relPosY + this.speeds.y;
+        this.obj.style.width = px(this.width);
+        this.obj.style.height = px(this.height);
+        this.obj.style.backgroundColor = this.color;
+        this.obj.style.left = px(this.x);
+        this.obj.style.top = px(this.y);
+        this.collusion();
+    }
+
+    collusion() {
+        if (this.sc.absoluteWidth < (this.relPosX + this.width)) {
+            this.speeds.x *= -1;
+        }
+        if (0 > (this.relPosX + this.speeds.x)) {
+            this.speeds.x *= -1;
+        }
+        if (0 > (this.relPosY + this.speeds.y)) {
+            this.speeds.y *= -1;
+        }
+        if (this.sc.absoluteHeight < (this.relPosY + this.height)) {
+            this.speeds.y *= -1;
+        }
+    }
+}
+
 
 class Scaler {
     constructor(displayWidth, displayHeight, absoluteWidth) {
@@ -127,18 +210,9 @@ class Scaler {
 
 }
 
-class Ball{
-    constructor(sc, size, x, y) {
-        this.sc = sc;
-        this.x = this.sc.relPosX + x;
-        this.y = this.sc.relPosY + y;
-        this.relPosX = x;
-        this.relPosY = y;
-        this.size = size;
-        this.color = "blue";
-        this.ball = document.createElement("div");
-        document.body.appendChild(this.ball);
-        this.ball.style.position = "absolute";
+class Ball extends Object{
+    constructor(gameField, width, x, y, color) {
+        super(gameField, width, width, x, y, color);
     }
 
     move(x, y) {
@@ -146,24 +220,31 @@ class Ball{
         this.relPosY += y;
     }
 
-    render() {
-        this.x = this.sc.relPosX + this.relPosX;
-        this.y = this.sc.relPosY + this.relPosY;
-        this.ball.style.width = px(this.size);
-        this.ball.style.height = px(this.size);
-        this.ball.style.backgroundColor = this.color;
-        this.ball.style.borderRadius = px(50);
-        this.ball.style.left = px(this.x);
-        this.ball.style.top = px(this.y);
+    speed(x = 0, y = 0) {
+        this.speeds = {
+            x: x,
+            y: y
+        }
     }
+
+    render() {
+        super.render();
+        this.obj.style.borderRadius = px(50);
+    }
+
+}
+
+class Rectangle extends Object{
+
 }
 
 class GameField {
-    constructor(sc, id) {
+    constructor(sc, id, color) {
         this.sc = sc;
         this.width = this.sc.absoluteWidth;
         this.height = this.sc.absoluteHeight;
         this.id = id;
+        this.color = color;
         leftPlayerScore = 0;
         rightPlayerScore = 0;
         this.gameField = document.getElementById(id);
@@ -178,17 +259,10 @@ class GameField {
         this.sc.calcRelPositions(this);
         this.gameField.style.width = px(this.width);
         this.gameField.style.height = px(this.height);
-        this.gameField.style.backgroundColor = "red";
+        this.gameField.style.backgroundColor = this.color;
         this.gameField.style.margin = px(20);
     }
 
-
-    getMiddle() {
-        return {
-            width: (this.x + this.width / 2),
-            height: (this.y + this.height / 2)
-        };
-    }
 }
 
 initialize();
